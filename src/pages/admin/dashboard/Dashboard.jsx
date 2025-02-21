@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { getBlogsForUser } from "../../../utils/BlogService";
+// import { getBlogsForUser } from "../../../utils/BlogService";
 import Layout from "../../../components/layout/Layout";
 import myContext from "../../../context/data/myContext";
 import { Button } from "@material-tailwind/react";
@@ -7,39 +7,38 @@ import { Link, useNavigate } from "react-router-dom";
 
 function Dashboard() {
     const context = useContext(myContext);
-    const { mode } = context;
+    const { mode , getAllBlog, deleteBlogs } = context;
     const [blogs, setBlogs] = useState([]);
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
 
     // Fetch user data and blogs on mount
-    useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        console.log("Stored user: ", storedUser);
+    // useEffect(() => {
+    //     const storedUser = JSON.parse(localStorage.getItem("user"));
+        
+    //     if (!storedUser) {
+    //         navigate("/"); // Redirect to login if no user is found
+    //     } else {
+    //         setUser(storedUser);
+    //         const fetchBlogs = async () => {
+    //             try {
+    //                 console.log("Fetching blogs for userId: ", storedUser.uid);
+    //                 const userBlogs = await getBlogsForUser(storedUser.uid);
 
-        if (!storedUser) {
-            navigate("/"); // Redirect to login if no user is found
-        } else {
-            setUser(storedUser);
-            const fetchBlogs = async () => {
-                try {
-                    console.log("Fetching blogs for userId: ", storedUser.uid);
-                    const userBlogs = await getBlogsForUser(storedUser.uid);
+    //                 if (!userBlogs.length) {
+    //                     console.warn("No blogs found for the user.");
+    //                 }
 
-                    if (!userBlogs.length) {
-                        console.warn("No blogs found for the user.");
-                    }
+    //                 console.log("Fetched blogs: ", userBlogs);
+    //                 setBlogs(userBlogs);
+    //             } catch (error) {
+    //                 console.error("Error fetching blogs: ", error);
+    //             }
+    //         };
 
-                    console.log("Fetched blogs: ", userBlogs);
-                    setBlogs(userBlogs);
-                } catch (error) {
-                    console.error("Error fetching blogs: ", error);
-                }
-            };
-
-            fetchBlogs();
-        }
-    }, [navigate]);
+    //         fetchBlogs();
+    //     }
+    // }, [navigate]);
 
     // Logout function
     const logout = () => {
@@ -47,16 +46,25 @@ function Dashboard() {
         navigate("/");
     };
 
+//filter user blogs
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+        console.log("Stored user: ", storedUser);
+        console.log("user Id: ", storedUser.userId);
+        console.log("all Blog details: ",getAllBlog);
+        console.log("User id in blog: ",getAllBlog[5].userId);
+        
+        const filteredBlogs = getAllBlog.filter(blog=>storedUser.userId === blog.userId);
+
     // Delete blog function
-    const handleDeleteBlog = async (blogId) => {
-        try {
-            await deleteBlog(blogId);
-            setBlogs((prev) => prev.filter((blog) => blog.id !== blogId));
-            console.log(`Blog with ID ${blogId} deleted successfully.`);
-        } catch (error) {
-            console.error(`Error deleting blog with ID ${blogId}:`, error);
-        }
-    };
+    // const handleDeleteBlog = async (blogId) => {
+    //     try {
+    //         await deleteBlog(blogId);
+    //         setBlogs((prev) => prev.filter((blog) => blog.id !== blogId));
+    //         console.log(`Blog with ID ${blogId} deleted successfully.`);
+    //     } catch (error) {
+    //         console.error(`Error deleting blog with ID ${blogId}:`, error);
+    //     }
+    // };
 
     return (
         <Layout>
@@ -81,7 +89,7 @@ function Dashboard() {
                             {user?.email || "Your Email"}
                         </h2>
                         <h2 className="font-semibold" style={{ color: mode === "dark" ? "white" : "black" }}>
-                            <span>Total Blogs: </span> {blogs.length}
+                            <span>Total Blogs: </span> {filteredBlogs.length}
                         </h2>
                         <div className="flex gap-2 mt-2">
                             <Link to="/createblog">
@@ -111,8 +119,8 @@ function Dashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {blogs.length > 0 ? (
-                                    blogs.map((item, index) => {
+                                {filteredBlogs.length > 0 ? (
+                                    filteredBlogs.map((item, index) => {
                                         const { id, thumbnail, date, title, category } = item;
                                         return (
                                             <tr key={id} className="border-b-2">
@@ -124,7 +132,7 @@ function Dashboard() {
                                                 <td className="px-6 py-4">{category || "No Category"}</td>
                                                 <td className="px-6 py-4">{date || "No Date"}</td>
                                                 <td className="px-6 py-4">
-                                                    <button onClick={() => handleDeleteBlog(id)} className="px-4 py-1 rounded-lg text-white font-bold bg-red-500">
+                                                    <button onClick={() => deleteBlogs(item.id)} className="px-4 py-1 rounded-lg text-white font-bold bg-red-500">
                                                         Delete
                                                     </button>
                                                 </td>
